@@ -1,0 +1,294 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+enum AdminRole {
+  SUPER_ADMIN
+  MANAGER
+  EDITOR
+}
+
+enum Currency {
+  INR
+  USD
+  EUR
+  GBP
+  CAD
+  AUD
+  THB
+  CNY
+}
+
+model Client {
+  id         Int        @id @default(autoincrement())
+  username   String     @unique
+  email      String     @unique
+  password   String
+  isVerified Boolean    @default(false)
+  status     UserStatus @default(ACTIVE)
+  createdAt  DateTime   @default(now())
+  otp        OTP[]
+  job        Job[]
+}
+
+model Admin {
+  id        Int        @id @default(autoincrement())
+  username  String     @unique
+  email     String     @unique
+  password  String
+  role      AdminRole  @default(EDITOR)
+  status    UserStatus @default(ACTIVE)
+  job       Job[]
+  createdAt DateTime   @default(now())
+}
+
+model OTP {
+  id        Int      @id @default(autoincrement())
+  otp       String
+  expiresAt DateTime
+  user      Client   @relation(fields: [clientId], references: [id])
+  clientId  Int
+  createdAt DateTime @default(now())
+}
+
+model Service {
+  id          Int          @id @default(autoincrement())
+  name        String       @unique
+  description String?
+  order       Int?         @default(0) 
+  afterImage  String
+  beforeImage String
+  subServices SubService[]
+  galleries   GalleryShowcase[] 
+  serviceImages ServiceImageCarousel[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model ServiceImageCarousel {
+  id        Int      @id @default(autoincrement())
+  imageName String
+  imageUrl  String?  // Optional: if you want to store full URLs
+  order     Int      @default(0) // Made required for proper ordering
+  serviceId Int
+  service   Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([serviceId, order]) // Compound index for efficient ordering queries
+  @@unique([serviceId, order]) // Ensure unique order per service
+}
+
+
+model ContactLead {
+  id          Int      @id @default(autoincrement())
+  name        String
+  email       String
+  phone       String
+  service     String?
+  description String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model SubService {
+  id          Int              @id @default(autoincrement())
+  name        String
+  description String?
+  afterImage  String?
+  beforeImage String?
+  order       Int?         @default(0) 
+  prices      PriceByCountry[]
+  service     Service          @relation(fields: [serviceId], references: [id])
+  serviceId   Int
+  jobs        Job[]   
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@unique([name, serviceId])
+}
+
+model GalleryShowcase {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String?
+  beforeImage String
+  afterImage  String
+  serviceId   Int
+  service     Service  @relation(fields: [serviceId], references: [id])
+  displayOrder Int     @default(0)  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model PriceByCountry {
+  id           Int        @id @default(autoincrement())
+  subService   SubService @relation(fields: [subServiceId], references: [id])
+  subServiceId Int
+  currency     Currency   @default(USD)
+  price        Decimal    @db.Decimal(10, 2)
+
+  @@unique([subServiceId, currency])
+}
+
+model Job {
+  id                Int           @id @default(autoincrement())
+  user              Client        @relation(fields: [clientId], references: [id])
+  clientId          Int
+  subServices       SubService[]  // Changed to many-to-many relationship
+  totalPrice        Decimal       @db.Decimal(10, 2)
+  currency          Currency
+  status            JobStatus     @default(PENDING)
+  dropboxLink       String
+  editorDropboxLink String?
+  instructions      String?       @db.Text
+  numberOfPhotos    Int           @default(0)
+  progress          Int           @default(0)
+  payment           Payment?
+  assignedTo        Admin?        @relation(fields: [editorId] , references: [id])
+  editorId          Int?
+  assignedAt        DateTime      @default(now())
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+}
+
+model Payment {
+  id              String        @id @default(uuid())
+  job             Job           @relation(fields: [jobId], references: [id])
+  jobId           Int           @unique
+  seriesType      SeriesType
+  seriesNumber    String        @unique
+  fiscalYear      String
+  amount          Decimal       @db.Decimal(10, 2)
+  currency        Currency
+  paymentMethod   PaymentMethod
+  status          PaymentStatus @default(PENDING)
+  invoiceNumber   String        @unique
+  invoiceDate     DateTime
+  dueDate         DateTime
+  clientName      String   // Changed from payerName to clientName
+  clientEmail     String   // Added
+  clientPhone     String   // Added
+  clientGstin     String?
+  clientAddress   String
+  clientCity      String
+  clientState     String
+  clientCountry   String
+  cgstAmount      Decimal?      @db.Decimal(10, 2)
+  sgstAmount      Decimal?      @db.Decimal(10, 2)
+  igstAmount      Decimal?      @db.Decimal(10, 2)
+  totalTaxAmount  Decimal       @db.Decimal(10, 2)
+  totalAmount     Decimal       @db.Decimal(10, 2)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
+
+model Image {
+  id        Int      @id @default(autoincrement())
+  imagePath String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+model Sliderimage {
+  id        Int      @id @default(autoincrement())
+  imagePath String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+enum SeriesType {
+  KR
+  PP
+}
+
+enum PaymentMethod {
+  PAYPAL
+  OTHER
+}
+
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum JobStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+model JobOpening {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String
+  postedDate  DateTime @default(now())
+  imageUrl    String?  @default("https://placehold.co/70x70?text=JD")
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  applications JobApplication[]
+}
+
+model JobApplication {
+  id                Int      @id @default(autoincrement())
+  email            String
+  fullName         String
+  contactNo        String
+  currentCompany   String?
+  currentDesignation String?
+  currentCTC       String?
+  expectedCTC      String?
+  currentLocation  String
+  overallExperience String
+  jobType          String   // Enum: "Full Time", "Contract", "Internship", "PartTime"
+  noticePeriod     String
+  coverLetterPath  String?  // File path
+  resumePath       String?  // File path
+  portfolioLink    String?
+  jobOpeningId     Int
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  jobOpening       JobOpening @relation(fields: [jobOpeningId], references: [id])
+}
+
+model FreeTrialLead {
+  id        Int      @id @default(autoincrement())
+  serviceId Int
+  service   String
+  brief     String
+  name      String
+  email     String
+  format    String
+  imageLink String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Testimonial {
+  id        Int      @id @default(autoincrement())
+  text      String
+  author    String
+  position  String
+  createdAt DateTime @default(now())
+}
