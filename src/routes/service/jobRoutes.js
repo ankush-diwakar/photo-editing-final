@@ -3,6 +3,7 @@ const passport = require('passport');
 const router = require("express").Router();
 
 router.post("/",passport.authenticate('jwt',{session:false}), jobController.createJob);
+
 router.get("/", jobController.getAllJobs);
 router.get("/assigned-jobs",passport.authenticate('jwt',{session:false}),jobController.getAssignedJobs)//#
 router.get("/user-jobs",jobController.getUserSpecificJobs);

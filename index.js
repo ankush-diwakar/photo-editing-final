@@ -21,6 +21,7 @@ const jobOpeningRoutes = require("./src/routes/jobOpenings/jobOpenings")
 const freeTrialLeadsRoutes = require("./src/routes/freeTrial/freeTrialLeads")
 const applicationRoutes = require('./src/routes/jobapplications/applicationRoutes');
 const serviceImageRouter = require('./src/routes/caraousal/serviceImageRouter');
+const quotesRoutes = require("./src/routes/quotes/quoteRoutes");
 
 const app = express();
 app.use(cors())
@@ -51,6 +52,7 @@ app.use('/api/pricing',pricesRoutes2);
 app.use('/api/job-openings',jobOpeningRoutes);
 app.use('/api/free-trial-leads',freeTrialLeadsRoutes);
 app.use('/api/carousal',serviceImageRouter);
+app.use('/api/quote', quotesRoutes);
 app.use('/api',applicationRoutes);
 
 app.use(express.static(path.join(__dirname, 'build')));

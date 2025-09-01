@@ -292,3 +292,38 @@ model Testimonial {
   position  String
   createdAt DateTime @default(now())
 }
+
+
+model QuoteRequest {
+  id                Int      @id @default(autoincrement())
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Service & Sub-Service IDs
+  serviceId         Int
+  subServiceIds     Int[]    // Stores an array of selected SubService IDs
+
+  // Customer Information
+  name              String
+  email             String
+  address           String
+  country           String
+  company           String?  // Optional
+  phone             String
+  webAddress        String?  // Optional
+
+  // Job Details
+  jobType           String   @db.Text
+  quantity          Int
+  deliveryTime      String
+  returnFileFormat  String
+
+  // File Management
+  linkType          String   // "upload" or "dropbox"
+  dropboxLink       String?  // Optional
+  uploadedFilePaths String[] // Stores an array of file paths from multer
+
+  // Project Details
+  numberOfPhotos    Int
+  instructions      String   @db.Text
+}
