@@ -610,8 +610,7 @@ const subServicesController = {
             res.status(500).json({ message: "Error updating prices for subservices", error });
         }
     },
-
-
+    
 
     getAllSubServices: async (req, res) => {
         try {
