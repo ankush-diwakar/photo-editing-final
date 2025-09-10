@@ -22,6 +22,7 @@ const freeTrialLeadsRoutes = require("./src/routes/freeTrial/freeTrialLeads")
 const applicationRoutes = require('./src/routes/jobapplications/applicationRoutes');
 const serviceImageRouter = require('./src/routes/caraousal/serviceImageRouter');
 const quotesRoutes = require("./src/routes/quotes/quoteRoutes");
+const quoteRequestRoutes = require("./src/routes/quoteRequestRoutes");
 
 const app = express();
 app.use(cors())
@@ -34,6 +35,8 @@ app.use(express.urlencoded({ limit: '100mb', extended: true }));
 app.use('/images', express.static(path.join(__dirname, 'uploads/images')));
 app.use('/uploads/applications', express.static(path.join(__dirname, 'uploads/applications/')));
 app.use('/uploads/service-images', express.static(path.join(__dirname, 'uploads/service-images')));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 
 app.use("/api/users",userRoutes);
 app.use("/api/admin",adminRoutes);
@@ -53,6 +56,7 @@ app.use('/api/job-openings',jobOpeningRoutes);
 app.use('/api/free-trial-leads',freeTrialLeadsRoutes);
 app.use('/api/carousal',serviceImageRouter);
 app.use('/api/quote', quotesRoutes);
+app.use('/api/quote-requests', quoteRequestRoutes);
 app.use('/api',applicationRoutes);
 
 app.use(express.static(path.join(__dirname, 'build')));
