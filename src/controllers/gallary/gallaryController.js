@@ -152,11 +152,130 @@ updateDisplayOrders: async (req, res) => {
 
 
 // Update the updateGallaryItem function with order shifting logic
+// updateGallaryItem: async (req, res) => {
+//     try {
+//         const { id } = req.params;
+//         const { title, description, serviceId, displayOrder } = req.body;
+        
+//         const currentItem = await prisma.galleryShowcase.findUnique({
+//             where: { id: parseInt(id) },
+//             select: { serviceId: true, displayOrder: true }
+//         });
+
+//         if (!currentItem) {
+//             return res.status(404).json({ error: 'Gallery item not found' });
+//         }
+
+//         const newServiceId = parseInt(serviceId);
+//         const newDisplayOrder = parseInt(displayOrder);
+//         const oldServiceId = currentItem.serviceId;
+//         const oldDisplayOrder = currentItem.displayOrder;
+
+//         // Start a transaction to handle order shifting
+//         await prisma.$transaction(async (prisma) => {
+//             // If service changed or order changed, we need to handle shifting
+//             if (newServiceId !== oldServiceId || newDisplayOrder !== oldDisplayOrder) {
+                
+//                 // If service changed, handle old service orders
+//                 if (newServiceId !== oldServiceId) {
+//                     // Shift down items in old service that were after the old position
+//                     await prisma.galleryShowcase.updateMany({
+//                         where: {
+//                             serviceId: oldServiceId,
+//                             displayOrder: { gt: oldDisplayOrder }
+//                         },
+//                         data: {
+//                             displayOrder: { decrement: 1 }
+//                         }
+//                     });
+//                 }
+
+//                 // Handle new service orders
+//                 if (newServiceId !== oldServiceId) {
+//                     // Shift up items in new service that are at or after the new position
+//                     await prisma.galleryShowcase.updateMany({
+//                         where: {
+//                             serviceId: newServiceId,
+//                             displayOrder: { gte: newDisplayOrder }
+//                         },
+//                         data: {
+//                             displayOrder: { increment: 1 }
+//                         }
+//                     });
+//                 } else {
+//                     // Same service, different order
+//                     if (newDisplayOrder < oldDisplayOrder) {
+//                         // Moving up: shift down items between new and old position
+//                         await prisma.galleryShowcase.updateMany({
+//                             where: {
+//                                 serviceId: newServiceId,
+//                                 displayOrder: { gte: newDisplayOrder, lt: oldDisplayOrder },
+//                                 id: { not: parseInt(id) }
+//                             },
+//                             data: {
+//                                 displayOrder: { increment: 1 }
+//                             }
+//                         });
+//                     } else if (newDisplayOrder > oldDisplayOrder) {
+//                         // Moving down: shift up items between old and new position
+//                         await prisma.galleryShowcase.updateMany({
+//                             where: {
+//                                 serviceId: newServiceId,
+//                                 displayOrder: { gt: oldDisplayOrder, lte: newDisplayOrder },
+//                                 id: { not: parseInt(id) }
+//                             },
+//                             data: {
+//                                 displayOrder: { decrement: 1 }
+//                             }
+//                         });
+//                     }
+//                 }
+//             }
+
+//             // Update the main item
+//             const updateData = {
+//                 title,
+//                 description: description || null,
+//                 serviceId: newServiceId,
+//                 displayOrder: newDisplayOrder
+//             };
+
+//             // Add images if uploaded
+//             if (req.uploadedFiles) {
+//                 if (req.uploadedFiles.beforeImage) {
+//                     updateData.beforeImage = req.uploadedFiles.beforeImage;
+//                 }
+//                 if (req.uploadedFiles.afterImage) {
+//                     updateData.afterImage = req.uploadedFiles.afterImage;
+//                 }
+//             }
+
+//             await prisma.galleryShowcase.update({
+//                 where: { id: parseInt(id) },
+//                 data: updateData
+//             });
+//         });
+
+//         // Fetch the updated item with service info
+//         const updatedGalleryEntry = await prisma.galleryShowcase.findUnique({
+//             where: { id: parseInt(id) },
+//             include: {
+//                 service: true
+//             }
+//         });
+
+//         res.json(updatedGalleryEntry);
+//     } catch (error) {
+//         console.error('Error updating gallery entry:', error);
+//         res.status(500).json({ error: 'Internal server error' });
+//     }
+// },
+
 updateGallaryItem: async (req, res) => {
     try {
         const { id } = req.params;
         const { title, description, serviceId, displayOrder } = req.body;
-        
+
         const currentItem = await prisma.galleryShowcase.findUnique({
             where: { id: parseInt(id) },
             select: { serviceId: true, displayOrder: true }
@@ -171,15 +290,10 @@ updateGallaryItem: async (req, res) => {
         const oldServiceId = currentItem.serviceId;
         const oldDisplayOrder = currentItem.displayOrder;
 
-        // Start a transaction to handle order shifting
-        await prisma.$transaction(async (prisma) => {
-            // If service changed or order changed, we need to handle shifting
+        const updatedGalleryEntry = await prisma.$transaction(async (tx) => {
             if (newServiceId !== oldServiceId || newDisplayOrder !== oldDisplayOrder) {
-                
-                // If service changed, handle old service orders
                 if (newServiceId !== oldServiceId) {
-                    // Shift down items in old service that were after the old position
-                    await prisma.galleryShowcase.updateMany({
+                    await tx.galleryShowcase.updateMany({
                         where: {
                             serviceId: oldServiceId,
                             displayOrder: { gt: oldDisplayOrder }
@@ -190,10 +304,8 @@ updateGallaryItem: async (req, res) => {
                     });
                 }
 
-                // Handle new service orders
                 if (newServiceId !== oldServiceId) {
-                    // Shift up items in new service that are at or after the new position
-                    await prisma.galleryShowcase.updateMany({
+                    await tx.galleryShowcase.updateMany({
                         where: {
                             serviceId: newServiceId,
                             displayOrder: { gte: newDisplayOrder }
@@ -203,10 +315,8 @@ updateGallaryItem: async (req, res) => {
                         }
                     });
                 } else {
-                    // Same service, different order
                     if (newDisplayOrder < oldDisplayOrder) {
-                        // Moving up: shift down items between new and old position
-                        await prisma.galleryShowcase.updateMany({
+                        await tx.galleryShowcase.updateMany({
                             where: {
                                 serviceId: newServiceId,
                                 displayOrder: { gte: newDisplayOrder, lt: oldDisplayOrder },
@@ -217,8 +327,7 @@ updateGallaryItem: async (req, res) => {
                             }
                         });
                     } else if (newDisplayOrder > oldDisplayOrder) {
-                        // Moving down: shift up items between old and new position
-                        await prisma.galleryShowcase.updateMany({
+                        await tx.galleryShowcase.updateMany({
                             where: {
                                 serviceId: newServiceId,
                                 displayOrder: { gt: oldDisplayOrder, lte: newDisplayOrder },
@@ -232,7 +341,6 @@ updateGallaryItem: async (req, res) => {
                 }
             }
 
-            // Update the main item
             const updateData = {
                 title,
                 description: description || null,
@@ -240,28 +348,23 @@ updateGallaryItem: async (req, res) => {
                 displayOrder: newDisplayOrder
             };
 
-            // Add images if uploaded
-            if (req.uploadedFiles) {
-                if (req.uploadedFiles.beforeImage) {
-                    updateData.beforeImage = req.uploadedFiles.beforeImage;
+            // Store only filename if new images are uploaded
+            if (req.files) {
+                if (req.files.beforeImage && req.files.beforeImage[0]) {
+                    updateData.beforeImage = req.files.beforeImage[0].filename;
                 }
-                if (req.uploadedFiles.afterImage) {
-                    updateData.afterImage = req.uploadedFiles.afterImage;
+                if (req.files.afterImage && req.files.afterImage[0]) {
+                    updateData.afterImage = req.files.afterImage[0].filename;
                 }
             }
 
-            await prisma.galleryShowcase.update({
+            return await tx.galleryShowcase.update({
                 where: { id: parseInt(id) },
-                data: updateData
+                data: updateData,
+                include: {
+                    service: true
+                }
             });
-        });
-
-        // Fetch the updated item with service info
-        const updatedGalleryEntry = await prisma.galleryShowcase.findUnique({
-            where: { id: parseInt(id) },
-            include: {
-                service: true
-            }
         });
 
         res.json(updatedGalleryEntry);
@@ -271,64 +374,155 @@ updateGallaryItem: async (req, res) => {
     }
 },
 
+
+
 // Update addNewGallaryItem to handle order shifting when adding
+// addNewGallaryItem: async (req, res) => {
+//     try {
+//         const { title, description, serviceId, displayOrder } = req.body;
+       
+//         if (!req.uploadedFiles || !req.uploadedFiles.beforeImage || !req.uploadedFiles.afterImage) {
+//             return res.status(400).json({ error: 'Both before and after images are required' });
+//         }
+
+//         const newServiceId = parseInt(serviceId);
+//         let finalDisplayOrder;
+        
+//         if (displayOrder !== undefined && displayOrder !== null && displayOrder !== '') {
+//             finalDisplayOrder = parseInt(displayOrder);
+            
+//             // Shift existing items in the service that are at or after this position
+//             await prisma.galleryShowcase.updateMany({
+//                 where: {
+//                     serviceId: newServiceId,
+//                     displayOrder: { gte: finalDisplayOrder }
+//                 },
+//                 data: {
+//                     displayOrder: { increment: 1 }
+//                 }
+//             });
+//         } else {
+//             // Get current max displayOrder for this specific service
+//             const maxOrderItem = await prisma.galleryShowcase.findFirst({
+//                 where: { serviceId: newServiceId },
+//                 orderBy: { displayOrder: 'desc' },
+//                 select: { displayOrder: true }
+//             });
+//             finalDisplayOrder = maxOrderItem ? maxOrderItem.displayOrder + 1 : 1;
+//         }
+
+//         const galleryEntry = await prisma.galleryShowcase.create({
+//             data: {
+//                 title,
+//                 description: description || null,
+//                 beforeImage: req.uploadedFiles.beforeImage,
+//                 afterImage: req.uploadedFiles.afterImage,
+//                 serviceId: newServiceId,
+//                 displayOrder: finalDisplayOrder
+//             },
+//             include: {
+//                 service: true
+//             }
+//         });
+
+//         res.status(201).json(galleryEntry);
+//     } catch (error) {
+//         console.error('Error creating gallery entry:', error);
+//         res.status(500).json({ error: 'Internal server error' });
+//     }
+// },
+
+
 addNewGallaryItem: async (req, res) => {
     try {
         const { title, description, serviceId, displayOrder } = req.body;
-       
-        if (!req.uploadedFiles || !req.uploadedFiles.beforeImage || !req.uploadedFiles.afterImage) {
+
+        if (!req.files || !req.files.beforeImage || !req.files.afterImage) {
             return res.status(400).json({ error: 'Both before and after images are required' });
         }
 
         const newServiceId = parseInt(serviceId);
+
+        // Validate service exists
+        const serviceExists = await prisma.service.findUnique({
+            where: { id: newServiceId }
+        });
+
+        if (!serviceExists) {
+            return res.status(404).json({ error: 'Service not found' });
+        }
+
+        // Store only the filename, not the full path
+        const beforeImageFilename = req.files.beforeImage[0].filename;
+        const afterImageFilename = req.files.afterImage[0].filename;
+
         let finalDisplayOrder;
-        
+
         if (displayOrder !== undefined && displayOrder !== null && displayOrder !== '') {
             finalDisplayOrder = parseInt(displayOrder);
-            
-            // Shift existing items in the service that are at or after this position
-            await prisma.galleryShowcase.updateMany({
-                where: {
-                    serviceId: newServiceId,
-                    displayOrder: { gte: finalDisplayOrder }
-                },
-                data: {
-                    displayOrder: { increment: 1 }
-                }
+
+            const galleryEntry = await prisma.$transaction(async (tx) => {
+                await tx.galleryShowcase.updateMany({
+                    where: {
+                        serviceId: newServiceId,
+                        displayOrder: { gte: finalDisplayOrder }
+                    },
+                    data: {
+                        displayOrder: { increment: 1 }
+                    }
+                });
+
+                return await tx.galleryShowcase.create({
+                    data: {
+                        title,
+                        description: description || null,
+                        beforeImage: beforeImageFilename,
+                        afterImage: afterImageFilename,
+                        serviceId: newServiceId,
+                        displayOrder: finalDisplayOrder
+                    },
+                    include: {
+                        service: true
+                    }
+                });
             });
+
+            res.status(201).json(galleryEntry);
         } else {
-            // Get current max displayOrder for this specific service
             const maxOrderItem = await prisma.galleryShowcase.findFirst({
                 where: { serviceId: newServiceId },
                 orderBy: { displayOrder: 'desc' },
                 select: { displayOrder: true }
             });
             finalDisplayOrder = maxOrderItem ? maxOrderItem.displayOrder + 1 : 1;
+
+            const galleryEntry = await prisma.galleryShowcase.create({
+                data: {
+                    title,
+                    description: description || null,
+                    beforeImage: beforeImageFilename,
+                    afterImage: afterImageFilename,
+                    serviceId: newServiceId,
+                    displayOrder: finalDisplayOrder
+                },
+                include: {
+                    service: true
+                }
+            });
+
+            res.status(201).json(galleryEntry);
         }
-
-        const galleryEntry = await prisma.galleryShowcase.create({
-            data: {
-                title,
-                description: description || null,
-                beforeImage: req.uploadedFiles.beforeImage,
-                afterImage: req.uploadedFiles.afterImage,
-                serviceId: newServiceId,
-                displayOrder: finalDisplayOrder
-            },
-            include: {
-                service: true
-            }
-        });
-
-        res.status(201).json(galleryEntry);
     } catch (error) {
         console.error('Error creating gallery entry:', error);
+        if (error.code === 'P2002') {
+            return res.status(400).json({ error: 'Duplicate entry' });
+        }
+        if (error.code === 'P2003') {
+            return res.status(400).json({ error: 'Service not found' });
+        }
         res.status(500).json({ error: 'Internal server error' });
     }
 },
-
-
-
 
 
 
