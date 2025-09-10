@@ -35,6 +35,8 @@ app.use(express.urlencoded({ limit: '100mb', extended: true }));
 app.use('/images', express.static(path.join(__dirname, 'uploads/images')));
 app.use('/uploads/applications', express.static(path.join(__dirname, 'uploads/applications/')));
 app.use('/uploads/service-images', express.static(path.join(__dirname, 'uploads/service-images')));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 
 app.use("/api/users",userRoutes);
 app.use("/api/admin",adminRoutes);
