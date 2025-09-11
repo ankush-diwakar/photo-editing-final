@@ -369,21 +369,37 @@ const jobController = {
             handlePrismaError(error, res);
         }
     },
-    getUserSpecificJobs: async (req, res) => {
-        try {
-            const { userId } = req.query;
-            console.log(userId);
-            const jobs = await prisma.job.findMany({
-                where: { clientId: Number(userId) },
-                include: { subServices: true }
-            })
-            if (jobs.length == 0) return res.status(404).json({ "Message": "Jobs not found" });
-            res.status(201).json({ "Message": "Successfull", jobs });
-        } catch (error) {
-            handlePrismaError(error, res);
-        }
+//     getUserSpecificJobs: async (req, res) => {
+//         try {
+//             const { userId } = req.query;
+//             console.log(userId);
+//             const jobs = await prisma.job.findMany({
+//                 where: { clientId: Number(userId) },
+//                 include: { subServices: true }
+//             })
+//             if (jobs.length == 0) return res.status(404).json({ "Message": "Jobs not found" });
+//             res.status(201).json({ "Message": "Successfull", jobs });
+//         } catch (error) {
+//             handlePrismaError(error, res);
+//         }
+//     }
+// };
+
+
+getUserSpecificJobs: async (req, res) => {
+    try {
+        const { userId } = req.query;
+        console.log(userId);
+        const jobs = await prisma.job.findMany({
+            where: { clientId: Number(userId) },
+            include: { subServices: true }
+        })
+        // Return empty array instead of 404 error when no jobs found
+        res.status(200).json({ "Message": "Successful", jobs });
+    } catch (error) {
+        handlePrismaError(error, res);
     }
-};
+}};
 
 function handlePrismaError(error, res) {
     console.error(error);
