@@ -1,4 +1,5 @@
 
+
 // const multer = require('multer');
 // const path = require('path');
 
@@ -10,6 +11,10 @@
 //     if (file.fieldname === 'coverLetter' || file.fieldname === 'resume') {
 //       uploadPath += 'applications/';
 //     } else if (file.fieldname === 'beforeImage' || file.fieldname === 'afterImage') {
+//       uploadPath += 'images/';
+//     } else if (file.fieldname === 'serviceImages') {
+//       uploadPath += 'service-images/'; // New path for service carousel images
+//     } else {
 //       uploadPath += 'images/';
 //     }
     
@@ -34,14 +39,14 @@
 //     cb(new Error('Error: Only PDF and DOC files are allowed!'));
 //   } else {
 //     // Existing image filter logic
-//     const filetypes = /jpeg|jpg|png|gif/;
+//     const filetypes = /jpeg|jpg|png|gif|webp/;
 //     const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
 //     const mimetype = filetypes.test(file.mimetype);
 
 //     if (mimetype && extname) {
 //       return cb(null, true);
 //     }
-//     cb(new Error('Error: Images Only! (jpeg, jpg, png, gif)'));
+//     cb(new Error('Error: Images Only! (jpeg, jpg, png, gif, webp)'));
 //   }
 // };
 
@@ -56,9 +61,9 @@
 //   uploadSubServiceImages: upload.fields([
 //     { name: 'beforeImage', maxCount: 1 },
 //     { name: 'afterImage', maxCount: 1 }
-//   ])
+//   ]),
+//   uploadServiceImages: upload.array('serviceImages', 20) // New middleware for service images
 // };
-
 
 const multer = require('multer');
 const path = require('path');
@@ -73,7 +78,11 @@ const storage = multer.diskStorage({
     } else if (file.fieldname === 'beforeImage' || file.fieldname === 'afterImage') {
       uploadPath += 'images/';
     } else if (file.fieldname === 'serviceImages') {
-      uploadPath += 'service-images/'; // New path for service carousel images
+      uploadPath += 'service-images/';
+    } else if (file.fieldname === 'heroImage') {
+      uploadPath += 'hero-images/'; // New path for hero images
+    } else if (file.fieldname === 'heroVideo') {
+      uploadPath += 'hero-videos/'; // New path for hero videos
     } else {
       uploadPath += 'images/';
     }
@@ -97,6 +106,16 @@ const fileFilter = (req, file, cb) => {
       return cb(null, true);
     }
     cb(new Error('Error: Only PDF and DOC files are allowed!'));
+  } else if (file.fieldname === 'heroVideo') {
+    // Allow video files for hero videos
+    const filetypes = /mp4|avi|mov|wmv|webm/;
+    const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
+    const mimetype = filetypes.test(file.mimetype);
+    
+    if (mimetype && extname) {
+      return cb(null, true);
+    }
+    cb(new Error('Error: Only video files are allowed! (mp4, avi, mov, wmv, webm)'));
   } else {
     // Existing image filter logic
     const filetypes = /jpeg|jpg|png|gif|webp/;
@@ -113,7 +132,7 @@ const fileFilter = (req, file, cb) => {
 const upload = multer({
   storage: storage,
   fileFilter: fileFilter,
-  limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
+  limits: { fileSize: 50 * 1024 * 1024 } // 50MB limit for videos
 });
 
 module.exports = {
@@ -122,5 +141,7 @@ module.exports = {
     { name: 'beforeImage', maxCount: 1 },
     { name: 'afterImage', maxCount: 1 }
   ]),
-  uploadServiceImages: upload.array('serviceImages', 20) // New middleware for service images
+  uploadServiceImages: upload.array('serviceImages', 20),
+  uploadHeroImage: upload.single('heroImage'), // New middleware for hero images
+  uploadHeroVideo: upload.single('heroVideo') // New middleware for hero videos
 };

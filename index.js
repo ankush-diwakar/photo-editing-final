@@ -23,6 +23,8 @@ const applicationRoutes = require('./src/routes/jobapplications/applicationRoute
 const serviceImageRouter = require('./src/routes/caraousal/serviceImageRouter');
 const quotesRoutes = require("./src/routes/quotes/quoteRoutes");
 const quoteRequestRoutes = require("./src/routes/quoteRequestRoutes");
+const heroRoutes = require('./src/routes/heroRoutes');
+
 
 const app = express();
 app.use(cors())
@@ -36,6 +38,13 @@ app.use('/images', express.static(path.join(__dirname, 'uploads/images')));
 app.use('/uploads/applications', express.static(path.join(__dirname, 'uploads/applications/')));
 app.use('/uploads/service-images', express.static(path.join(__dirname, 'uploads/service-images')));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/uploads/hero-images', express.static(path.join(__dirname, 'uploads/hero-images')));
+app.use('/uploads/hero-videos', express.static(path.join(__dirname, 'uploads/hero-videos')));
+
+app.use(cors({
+  origin: 'http://localhost:3000', // Your frontend URL
+  credentials: true
+}));
 
 
 app.use("/api/users",userRoutes);
@@ -58,6 +67,7 @@ app.use('/api/carousal',serviceImageRouter);
 app.use('/api/quote', quotesRoutes);
 app.use('/api/quote-requests', quoteRequestRoutes);
 app.use('/api',applicationRoutes);
+app.use('/api/hero', heroRoutes);
 
 app.use(express.static(path.join(__dirname, 'build')));
 

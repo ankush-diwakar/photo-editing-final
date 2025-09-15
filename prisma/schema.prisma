@@ -327,3 +327,26 @@ model QuoteRequest {
   numberOfPhotos    Int
   instructions      String   @db.Text
 }
+model HeroSlide {
+  id           Int      @id @default(autoincrement())
+  title        String?
+  description  String?  @db.Text
+  imageUrl     String?  @map("image_url")
+  showButton   Boolean  @default(false) @map("show_button")
+  displayOrder Int      @map("display_order")
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("hero_slides")
+}
+
+model HeroVideo {
+  id        Int      @id @default(autoincrement())
+  videoUrl  String   @map("video_url")
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("hero_videos")
+}
