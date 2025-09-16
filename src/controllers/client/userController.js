@@ -127,7 +127,7 @@ const authController = { // user Authentication Controller
       if (!user) return res.status(400).json({ "message": "No user with this email" });
       const resetToken = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: '10m' });
 
-      const resetUrl = `http://your-frontend-domain/reset-password?token=${resetToken}`;
+      const resetUrl = `http://localhost:3000/reset-password?token=${resetToken}`;
       await transporter.sendMail({
         to: email,
         subject: 'Password Reset Request',

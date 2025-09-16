@@ -42,7 +42,7 @@ app.use('/uploads/hero-images', express.static(path.join(__dirname, 'uploads/her
 app.use('/uploads/hero-videos', express.static(path.join(__dirname, 'uploads/hero-videos')));
 
 app.use(cors({
-  origin: 'http://localhost:3000', // Your frontend URL
+  origin: 'http://localhost:3000', 
   credentials: true
 }));
 
