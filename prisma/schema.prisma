@@ -46,6 +46,8 @@ model Client {
   createdAt  DateTime   @default(now())
   otp        OTP[]
   job        Job[]
+
+  @@map("client")
 }
 
 model Admin {
@@ -57,6 +59,8 @@ model Admin {
   status    UserStatus @default(ACTIVE)
   job       Job[]
   createdAt DateTime   @default(now())
+
+  @@map("admin")
 }
 
 model OTP {
@@ -66,6 +70,8 @@ model OTP {
   user      Client   @relation(fields: [clientId], references: [id])
   clientId  Int
   createdAt DateTime @default(now())
+
+  @@map("otp")
 }
 
 model Service {
@@ -80,22 +86,24 @@ model Service {
   serviceImages ServiceImageCarousel[]
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
+
+  @@map("service")
 }
 
 model ServiceImageCarousel {
   id        Int      @id @default(autoincrement())
   imageName String
-  imageUrl  String?  // Optional: if you want to store full URLs
-  order     Int      @default(0) // Made required for proper ordering
+  imageUrl  String?  
+  order     Int      @default(0)
   serviceId Int
   service   Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([serviceId, order]) // Compound index for efficient ordering queries
-  @@unique([serviceId, order]) // Ensure unique order per service
+  @@index([serviceId, order])
+  @@unique([serviceId, order])
+  @@map("serviceimagecarousel")
 }
-
 
 model ContactLead {
   id          Int      @id @default(autoincrement())
@@ -106,6 +114,8 @@ model ContactLead {
   description String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  @@map("contactlead")
 }
 
 model SubService {
@@ -123,6 +133,7 @@ model SubService {
   updatedAt   DateTime         @updatedAt
 
   @@unique([name, serviceId])
+  @@map("subservice")
 }
 
 model GalleryShowcase {
@@ -136,6 +147,8 @@ model GalleryShowcase {
   displayOrder Int     @default(0)  
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  @@map("galleryshowcase")
 }
 
 model PriceByCountry {
@@ -146,13 +159,14 @@ model PriceByCountry {
   price        Decimal    @db.Decimal(10, 2)
 
   @@unique([subServiceId, currency])
+  @@map("pricebycountry")
 }
 
 model Job {
   id                Int           @id @default(autoincrement())
   user              Client        @relation(fields: [clientId], references: [id])
   clientId          Int
-  subServices       SubService[]  // Changed to many-to-many relationship
+  subServices       SubService[]  
   totalPrice        Decimal       @db.Decimal(10, 2)
   currency          Currency
   status            JobStatus     @default(PENDING)
@@ -162,11 +176,13 @@ model Job {
   numberOfPhotos    Int           @default(0)
   progress          Int           @default(0)
   payment           Payment?
-  assignedTo        Admin?        @relation(fields: [editorId] , references: [id])
+  assignedTo        Admin?        @relation(fields: [editorId], references: [id])
   editorId          Int?
   assignedAt        DateTime      @default(now())
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
+
+  @@map("job")
 }
 
 model Payment {
@@ -183,9 +199,9 @@ model Payment {
   invoiceNumber   String        @unique
   invoiceDate     DateTime
   dueDate         DateTime
-  clientName      String   // Changed from payerName to clientName
-  clientEmail     String   // Added
-  clientPhone     String   // Added
+  clientName      String
+  clientEmail     String
+  clientPhone     String
   clientGstin     String?
   clientAddress   String
   clientCity      String
@@ -198,6 +214,8 @@ model Payment {
   totalAmount     Decimal       @db.Decimal(10, 2)
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
+
+  @@map("payment")
 }
 
 model Image {
@@ -205,13 +223,19 @@ model Image {
   imagePath String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@map("image")
 }
+
 model Sliderimage {
   id        Int      @id @default(autoincrement())
   imagePath String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@map("sliderimage")
 }
+
 enum SeriesType {
   KR
   PP
@@ -221,7 +245,6 @@ enum PaymentMethod {
   PAYPAL
   OTHER
 }
-
 
 enum PaymentStatus {
   PENDING
@@ -247,29 +270,33 @@ model JobOpening {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   applications JobApplication[]
+
+  @@map("jobopening")
 }
 
 model JobApplication {
-  id                Int      @id @default(autoincrement())
-  email            String
-  fullName         String
-  contactNo        String
-  currentCompany   String?
+  id                 Int        @id @default(autoincrement())
+  email              String
+  fullName           String
+  contactNo          String
+  currentCompany     String?
   currentDesignation String?
-  currentCTC       String?
-  expectedCTC      String?
-  currentLocation  String
-  overallExperience String
-  jobType          String   // Enum: "Full Time", "Contract", "Internship", "PartTime"
-  noticePeriod     String
-  coverLetterPath  String?  // File path
-  resumePath       String?  // File path
-  portfolioLink    String?
-  jobOpeningId     Int
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  currentCTC         String?
+  expectedCTC        String?
+  currentLocation    String
+  overallExperience  String
+  jobType            String
+  noticePeriod       String
+  coverLetterPath    String?
+  resumePath         String?
+  portfolioLink      String?
+  jobOpeningId       Int
+  createdAt          DateTime   @default(now())
+  updatedAt          DateTime   @updatedAt
 
-  jobOpening       JobOpening @relation(fields: [jobOpeningId], references: [id])
+  jobOpening         JobOpening @relation(fields: [jobOpeningId], references: [id])
+
+  @@map("jobapplication")
 }
 
 model FreeTrialLead {
@@ -283,6 +310,8 @@ model FreeTrialLead {
   imageLink String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@map("freetriallead")
 }
 
 model Testimonial {
@@ -291,42 +320,36 @@ model Testimonial {
   author    String
   position  String
   createdAt DateTime @default(now())
-}
 
+  @@map("testimonial")
+}
 
 model QuoteRequest {
   id                Int      @id @default(autoincrement())
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
-
-  // Service & Sub-Service IDs
   serviceId         Int
-  subServiceIds     Int[]    // Stores an array of selected SubService IDs
-
-  // Customer Information
+  subServiceIds     Int[]
   name              String
   email             String
   address           String
   country           String
-  company           String?  // Optional
+  company           String?
   phone             String
-  webAddress        String?  // Optional
-
-  // Job Details
+  webAddress        String?
   jobType           String   @db.Text
   quantity          Int
   deliveryTime      String
   returnFileFormat  String
-
-  // File Management
-  linkType          String   // "upload" or "dropbox"
-  dropboxLink       String?  // Optional
-  uploadedFilePaths String[] // Stores an array of file paths from multer
-
-  // Project Details
+  linkType          String
+  dropboxLink       String?
+  uploadedFilePaths String[]
   numberOfPhotos    Int
   instructions      String   @db.Text
+
+  @@map("quoterequest")
 }
+
 model HeroSlide {
   id           Int      @id @default(autoincrement())
   title        String?
@@ -338,7 +361,7 @@ model HeroSlide {
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
-  @@map("hero_slides")
+  @@map("heroslide")
 }
 
 model HeroVideo {
@@ -348,5 +371,5 @@ model HeroVideo {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  @@map("hero_videos")
+  @@map("herovideo")
 }
