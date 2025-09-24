@@ -81,6 +81,6 @@ app.get('*', (req, res) => {
 });
   
 // added 3000
-app.listen(8080,'0.0.0.0',()=>{
-    console.log("[Server]:-http://localhost:8080")
+app.listen(3000,'0.0.0.0',()=>{
+    console.log("[Server]:-http://localhost:3000" , "http://http://dev.productediting.com")
 })
