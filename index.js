@@ -69,17 +69,18 @@ app.use('/api/quote-requests', quoteRequestRoutes);
 app.use('/api',applicationRoutes);
 app.use('/api/hero', heroRoutes);
 
-app.use(express.static(path.join(__dirname, 'build')));
+// app.use(express.static(path.join(__dirname, 'build')));
 
 // app.get('', (req, res) => {
 //     res.sendFile(path.join(__dirname+'/build/index.html'));
 //   });
 
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'build', 'index.html'));
-});
+  
+// app.get('*', (req, res) => {
+//   res.sendFile(path.join(__dirname, 'build', 'index.html'));
+// });
   
 // added 3000
-app.listen(3000,'0.0.0.0',()=>{
-    console.log("[Server]:-http://localhost:3000")
+app.listen(8080,'0.0.0.0',()=>{
+    console.log("[Server]:-http://localhost:8080")
 })
